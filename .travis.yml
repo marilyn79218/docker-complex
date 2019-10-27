@@ -1,0 +1,26 @@
+sudo: required
+services:
+  - docker
+
+before_install:
+  - docker build -t marilyn79218/react-test -f ./client/Dockerfile.dev ./client
+
+script:
+  - docker run marilyn79218/react-test npm test -- --coverage
+
+# After react tests are finished successfully
+aftere_success:
+  # - Build prod version images of each services
+  - docker build -t marilyn79218/multi-client ./client
+  - docker build -t marilyn79218/multi-nginx ./nginx
+  - docker build -t marilyn79218/multi-server ./server
+  - docker build -t marilyn79218/multi-worker ./worker
+
+  # - Pushing above images to docker hub
+  # 1. Log in to docker CLI account first
+  - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ACCOUNT" --password-stdin
+  # 2. Pushing above images
+  - docker push marilyn79218/multi-client
+  - docker push marilyn79218/multi-nginx
+  - docker push marilyn79218/multi-server
+  - docker push marilyn79218/multi-worker
