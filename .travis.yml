@@ -15,7 +15,6 @@ aftere_success:
   - docker build -t marilyn79218/multi-nginx ./nginx
   - docker build -t marilyn79218/multi-server ./server
   - docker build -t marilyn79218/multi-worker ./worker
-
   # - Pushing above images to docker hub
   # 1. Log in to docker CLI account first
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ACCOUNT" --password-stdin
