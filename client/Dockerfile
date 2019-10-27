@@ -8,7 +8,7 @@ RUN npm run build
 
 
 FROM nginx
-# The reason we can expose port 3000 rather than port 80 (default) is our custom "./nginx/default.config"
 EXPOSE 3000
+# Since we used a customed nginx config for this client (React) service, we need to override it over the default one
 COPY ./nginx/default.config /etc/nginx/conf.d/default.conf
 COPY --from=build-phase /app/build /usr/share/nginx/html
