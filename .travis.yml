@@ -1,3 +1,15 @@
+# CI workflow for mutiple images: https://drive.google.com/open?id=1pc505TiwPUaFEKhkCixidDVsibAUz4so
+
+# Issues in single container CI workflow
+  # Diagram: https://drive.google.com/open?id=10_laFYFbUMRkDQ9Mu3zIr9rc8ZwNUwwh
+  # Class: https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437194#overview
+# 1. The app was simple
+# 2. Image was built mutiple times
+#   2.1. First time, Travis built image to run test before deploy phase
+#   2.2. Second time, in deploy phase, EBS built image again to boot the container up and then deploy it
+#        (Which also shows it is not a best approach that have EBS to do this extra process of building image,
+#         rather than doing its primary job of serving web requests)
+
 sudo: required
 services:
   - docker

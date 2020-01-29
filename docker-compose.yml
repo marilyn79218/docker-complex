@@ -1,3 +1,31 @@
+# App development diagram
+  # Pic: https://drive.google.com/open?id=16xqboA27lsE58w6gk-4tiberMacADmQo
+  # Class: https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437294#overview
+
+# Why we need Nginx in development?
+# In above pic, since we have Express server/ React development server at the same time,
+# we need a infrastructure to take browser requests and send them to the Express server/ React development server, this is where Nginx added in
+# See: https://drive.google.com/open?id=1bd7r3mGaWNvJIkCHjbBEafyTajarnitw
+
+# Also, by adding a "/api" prefix to the Express server requests,
+# Nginx can know it is going to be redirected to Express server, but not React server
+
+# Also, this is why we don't need any port-mapping for Express server/ React server services
+# They are not necessary to be exposed to the outside world except for Nginx.
+
+## Thinking about:
+# Why we are not just specifying different port for Express server/ React development server
+# Something like, request for index.html at dockerCluster:3000 (to React server), and request for index.html at dockerCluster:5000 (to Express server)
+# then we don't need to add an additional Nginx service for it
+# Reason:
+# You probably don't want to have to worry about juggling these different ports in production mode.
+# It would be nicer if all our requests (.html, .js, API, etc.) are routing through the same backend without specifying port for different services.
+
+## Thinking about:
+# What's the difference between requesting "/api/values/all" and "/values/all:5000" in our React requests?
+# Reason:
+# Because the port can very easily cahnged, depending on the environment we are deploying to.
+
 version: '3'
 services:
   postgres:
@@ -6,12 +34,35 @@ services:
     image: 'redis:latest'
   api-server:
     build:
+    # Note:
+      #   We're NOT specifying "./server/Dockerfile.dev" for dockerfile property here
+      #   As the dockerfile property is used to sinply specifying "the name of the Dockerfile"
+      #   To specify that we want to look in the "./server" folder, that's what the context property is for
       dockerfile: Dockerfile.dev
       context: ./server
+    # Summary for volumes
+      # So now anytime our application tries to access anthing inside of the /app directory inside the container except for the node_modules folder
+      # It's going to get redirected back to the ./server directory inside of our current project folder
     volumes:
+      # A bookmark to "/app/node_modules" folder inside this container
+      # Which means don't try to redirect access to it (See detail in "docker-react" project)
       - /app/node_modules
       - ./server:/app
+    # Note 1:
+      # When we set up an environment variable inside of a docker-compose file,
+      # we're setting up an environment variable that is applied at runtime (Only when the container is started up)
+      # The environment variable is not encoded inside the image.
+    # Note 2:
+      # There are two different ways to set up environment variable to the container
+      # Syntax 1
+        # variableName=value
+        # Sets a variable in the container at runtime
+      # Syntax 2
+        # variableName
+        # Sets a variable in the container at runtime
+        # Value is taken from your local computer (shell)
     environment:
+      # The value of REDIS_HOST/ PGHOST here, is the name of the redis/ postgres service in above
       - REDIS_HOST=redis
       - REDIS_PORT=6379
       - PGUSER=postgres
@@ -41,5 +92,6 @@ services:
       dockerfile: Dockerfile.dev
       context: ./nginx
     restart: always
+    # Nginx is the only one who need port-mapping inside this constainer cluster
     ports:
       - 3050:80
