@@ -1,6 +1,6 @@
 # App development diagram
-  # Pic: https://drive.google.com/open?id=16xqboA27lsE58w6gk-4tiberMacADmQo
-  # Class: https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437294#overview
+  # Diagram: https://drive.google.com/open?id=16xqboA27lsE58w6gk-4tiberMacADmQo
+  # Course: https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437294#overview
 
 # Why we need Nginx in development?
 # In above pic, since we have Express server/ React development server at the same time,
@@ -14,17 +14,17 @@
 # They are not necessary to be exposed to the outside world except for Nginx.
 
 ## Thinking about:
-# Why we are not just specifying different port for Express server/ React development server
-# Something like, request for index.html at dockerCluster:3000 (to React server), and request for index.html at dockerCluster:5000 (to Express server)
-# then we don't need to add an additional Nginx service for it
-# Reason:
-# You probably don't want to have to worry about juggling these different ports in production mode.
-# It would be nicer if all our requests (.html, .js, API, etc.) are routing through the same backend without specifying port for different services.
+  # Why we are not just specifying different port for Express server/ React development server
+  # Something like, request for index.html at dockerCluster:3000 (to React server), and request for index.html at dockerCluster:5000 (to Express server)
+  # then we don't need to add an additional Nginx service for it
+# Answer:
+  # You probably don't want to have to worry about juggling these different ports in production mode.
+  # It would be nicer if all our requests (.html, .js, API, etc.) are routing through the same backend without specifying port for different services.
 
 ## Thinking about:
-# What's the difference between requesting "/api/values/all" and "/values/all:5000" in our React requests?
-# Reason:
-# Because the port can very easily cahnged, depending on the environment we are deploying to.
+  # What's the difference between requesting "/api/values/all" and "/values/all:5000" in our React requests?
+# Answer:
+  # Because the port can very easily cahnged, depending on the environment we are deploying to.
 
 version: '3'
 services:

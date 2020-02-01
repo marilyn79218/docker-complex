@@ -1,8 +1,10 @@
-# CI workflow for mutiple images: https://drive.google.com/open?id=1pc505TiwPUaFEKhkCixidDVsibAUz4so
+# CI workflow for mutiple images
+  # Diagram: https://drive.google.com/open?id=1pc505TiwPUaFEKhkCixidDVsibAUz4so
+  # Course: https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437326#overview
 
 # Issues in single container CI workflow
   # Diagram: https://drive.google.com/open?id=10_laFYFbUMRkDQ9Mu3zIr9rc8ZwNUwwh
-  # Class: https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437194#overview
+  # Course: https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437194#overview
 # 1. The app was simple
 # 2. Image was built mutiple times
 #   2.1. First time, Travis built image to run test before deploy phase
@@ -10,29 +12,47 @@
 #        (Which also shows it is not a best approach that have EBS to do this extra process of building image,
 #         rather than doing its primary job of serving web requests)
 
+# Therefore, for "mutiple container case",
+# We are makeing Travis to build & publish production images to docker hub,
+# which can then be used directly by any other deployment service like AWS EBS or GCP services.
+# Rather than making Travis asking EBS to build image by itself in "single container case".
+
 sudo: required
 services:
   - docker
 
 before_install:
+  # Note:
+    # We're providing a relative path for ./client/Dockerfile.dev,
+    # rather than provider "dockerfile" & "context" properties separately in service section of docker-compose.yml.
   - docker build -t marilyn79218/react-test -f ./client/Dockerfile.dev ./client
+  # [1] If you have other project to run tests, you can do:
+  # - docker build -t my-other-project/what-ever ...
 
 script:
+  # Overwrites the default command in image with "npm test -- --coverage"
   - docker run marilyn79218/react-test npm test -- --coverage
+  # [1] then do:
+  # - docker run my-other-project/what-ever ...
 
 # After scripts (react tests) are finished successfully
 after_success:
-  # - Build prod version images of each services
+  # - 1. Build prod version images of each services (without speifying Dockerfile)
   - docker build -t marilyn79218/multi-client ./client
   - docker build -t marilyn79218/multi-nginx ./nginx
   - docker build -t marilyn79218/multi-server ./server
   - docker build -t marilyn79218/multi-worker ./worker
 
-  # - Pushing above images to docker hub
-  # 1. Log in to docker CLI account first
+  # - 2. Pushing above images to docker hub
+    # - 2.1. Log in to "docker CLI" account first
+      # Course: https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437340#overview
+      # Ref: https://docs.travis-ci.com/user/docker/#pushing-a-docker-image-to-a-registry
   - echo "$DOCKER_PASSWORD" | docker login -u "$DOCKER_ACCOUNT" --password-stdin
-  # 2. Pushing above images
+
+    # - 2.2. Pushing above images
   - docker push marilyn79218/multi-client
   - docker push marilyn79218/multi-nginx
   - docker push marilyn79218/multi-server
   - docker push marilyn79218/multi-worker
+
+  # Successfuly result: https://drive.google.com/open?id=1s6y0xfBB_pBvZAnRaKOx-b8DdfvCEZvX
