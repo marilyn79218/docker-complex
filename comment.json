@@ -1,0 +1,146 @@
+{
+  "__COMMENTS__GLOABL__": {
+    "deployment_mindset": {
+      "single_container": {
+        "Diagram": "https://drive.google.com/open?id=16kmkUgzbYX_E-_QHH7UN76HY_U3Horx6",
+        "mindset": "Since there's only one Dockerfile in this case, EBS knows how to treat it: build it and run the image that come out of it."
+      },
+      "muti_container": {
+        "Diagram": "https://drive.google.com/open?id=1qS3K6PL-VJW2iHlvMS6MMHRa_l_OSB2b",
+        "mindset": "In this case, since we have multiple images, EBS don't know how to treat them. Therefore, we need to define a configuration to tell EBS exactly what to do.",
+        "how": {
+          "Diagram": "https://drive.google.com/open?id=1ohypS0QsNpAzKwx8XKqvfIlk2D4k3OsE",
+          "Dockerrun.aws.json come to rescue": "This is a file similar to docker-compose.yml, which list out a bunch of services. With these services difintion, we tell docker how to build the image, what ports to open, etc.",
+          "Difference to docker-compose.yml": {
+            "#1": "Refering services as 'container definetions'",
+            "#2": "In docker-compose.yml, it contains info about how to build an image usgin a Dockerfile.dev. Which is not the case in Dockerrun.aws.json, as we already have a set of images.",
+            "#3": "So, instead of saying, oh here's how to build the client, nginx, ... in docker-compose.yml",
+            "#4": "We're just gonna say go pulling down the inages from Docker hub, and use it for these different container difinitions."
+          }
+        }
+      },
+      "Course": "https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437352#overview"
+    },
+    "before_start_on_this_Dockerrun.aws.json": {
+      "How EBS work with docker": {
+        "Diagram": "https://drive.google.com/open?id=1pg4uLFjFkSEGzsEMxdP9KzuuZtI4Dvou",
+        "Course": "https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437356#overview",
+        "#1": "EBS don't actually know how to work with containers.",
+        "#2": "Behind the scenes, when you tell EBS to host a set of containers, it actually delegating that hosting off to another service called Elastic Container service (ECS).",
+        "#3": "We work with ECS by creating files that are called Task definition. And a Task definition is essentially a file that tells ECS how to run one single container.",
+        "#4": "Each of these 'Task definition' files are very similar to the 'Container definitions' that we're going to write inside this Dockerrun.aws.json",
+        "#5": "In brief, you should go for the documentation of 'Task definition' when you want to find out more options in 'Container definitions'."
+      }
+    },
+    "production_architecture": {
+      "Diagram": "https://drive.google.com/open?id=1V7K9L9L42TJAhwFI2VSBje3CB405IonN",
+      "Course": "https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437370#overview",
+      "#1": "We've already wired up the definition in Dockerrun.aws.json for all these containers that is going to be running inside of our EBS instance. (Nginx routing server, Nginx files server, Express API server and the worker)",
+      "#2": "However, the instance of Redis and Postgres that is going to be serving data for application will not be inside of the EBS instance.",
+      "#3": "Instead, we're going to reply upon two external services to fulfill our data needs for our application.",
+      "#4": "The two services are called AWS Relational Database Serviec (RDS) and AWS Elastic Cache.",
+      "#5": "The reasons that we use these external services as opposed to making our own Redis and hosting inside of that instance.",
+      "Reasons for using AWS RDS": "https://drive.google.com/open?id=1VSXfEgrl9HZnHCrHtB43ccPixfQWGnVE",
+      "Reasons for using AWS Elastic Cache": "https://drive.google.com/open?id=1JfUBEfJiZVUkF0SNhw745oMTOmMws3WG",
+      "architecture_in_AWS": {
+        "Diagram_1": "https://drive.google.com/open?id=1fsfOG2-r5UkyEzdPomqK8rD2EcPrfS6Q",
+        "D_1_#1": "In each AWS regions, by deafult, you get something called virtual private cloud (VPC)",
+        "D_1_#2": "A VPC essentially is kind of its own private network, so that any instance/ service you created is isolated to just your account and it doesn't get automatically shared with random other people's AWS account",
+        "D_1_#3": "In each different region, you automatically get ONE default VPC created",
+        "D_1_#4": "So when we create our EBS instance, it was automatically assigned to that default VPC",
+        "Diagram_2": "https://drive.google.com/open?id=1r1nai3Hq6C9LBuqmcJxmlcSGVex-jRSE",
+        "D_2_#1": "Unfortunately, these services you created in AWS by default do not get to talk to each other",
+        "D_2_#2": "We have to form up a very distinct link between them",
+        "D_2_#3": "This kind of connection between them has absolutely nothing to do with docker.",
+        "Diagram_3": "https://drive.google.com/open?id=1xpXxxlIr9wUWO5r5IwwiXC5031LZGhrT",
+        "D_3_#1": "To get these services connected to each other, we have to create something called security group (firewall rule)",
+        "D_3_#2": "It's a rule describing what different sources on Internet are allowed to connect to different services running inside your VPC",
+        "D_3_#3": "When you created the EBS, a security group is automatically created that allows any incoming traffic from anywhere in the world, to connect to port 80 on your EBS",
+        "D_3_#4": "Each of these different security groups you created are going to apply to some set number of different services that exist inside of your VPC",
+        "D_3_#5": "So it allows someone else in the world to come into your VPC and connect specifically to your EBS",
+        "Diagram_4": "https://drive.google.com/open?id=1XlN8v-tBRs9MhYlReaA7fPHmpelyA9i_",
+        "D_4_#1": "How are we going to form a connection between EBS and RDS and Elastic Cache?",
+        "D_4_#2": "We're going to create a new security group (named SG_1) and it essentially as a rule let any traffic access this instance if the source belongs to SG_1",
+        "D_4_#3": "Then attach it to all three of these EBS/ RDS/ Elastic Cache services",
+        "Course": "https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437374#questions"
+      }
+    }
+  },
+  "AWSEBDockerrunVersion": 2,
+  "__COMMENTS__FOR_containerDefinitions": "For every entry that listed in this containerDefinitions array, it will be created as one separate container inside application.",
+  "containerDefinitions": [
+    {
+      "name": "client",
+      "image": "marilyn79218/multi-client",
+      "hostname": "client",
+      "essential": false,
+      "memory": 128,
+      "__COMMENTS__": {
+        "Course": "https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437358#overview",
+        "name": "It's just a name that is going to show up on a dashboard, it don't have to be identical to the project name",
+        "hostname_1": "Remember, in docker-compose.yml, by sending out a service named 'client', it essentially created a new hostname that could be accessed by any other containers that was created by docker-compose.",
+        "hostname_2": "For example, in ./Nginx/default.conf, we were able to reference client container simply by writing out 'http://client'.",
+        "hostname_3": "And so for docker-compose.yml, we kind of set up that 'hostname' by just defining the name of the service.",
+        "hostname_4": "But in the world of Dockerrun.aws.json, we have to specify a very distinct hostname to do the same thing.",
+        "hostname_5": "The hostname that other containers in this group will try to reach first when they are making a request. Basically, it's could just be the service name that specified in docker-compose file.",
+        "hostname_6": "If you're using a real world hostname like 'google.com' for it, and other containers are trying to access real 'http://google.com', then that request will be redirect to this container.",
+        "hostname_7": "In conclusion, you have to specify its hostname as the service name you defined in docker-compose. Because they are the name that is going to be referenced in nginx container.",
+        "essential_1": "1. When essential is true, means whenever this container crashes, all other containers in this group will be closed down at the same time.",
+        "essential_2": "2. At least one container have to be marked as essential in this group containers",
+        "image_course": "https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437390#questions",
+        "image_1": "When Travis pushed all the docker images to docker.hub, Travis is going to tap on the shoulder of EBS and say it's time for you to pull these new images",
+        "image_2": "In actually, when we say 'tap on the shoulder of EBS', it means upload just this Dockerrun.aws.json file",
+        "image_3": "This is the only file that we really have to send, which is diffrent from what we had done in previous app.",
+        "image_4": "Once EBS gets this file, it will pull the image specified in this 'image' property from docker.hub.",
+        "memory_course": "https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437394#questions",
+        "memory_1": "Essentially when ENS decides to create each of these containers, it's going to allocate some amount of RAM to each of them",
+        "memory_2": "So EBS wants us to tell it exactly how much RAM should be allocated to each container (MB)."
+      }
+    },
+    {
+      "name": "server",
+      "image": "marilyn79218/multi-server",
+      "hostname": "api-server",
+      "essential": false,
+      "memory": 128
+    },
+    {
+      "name": "worker",
+      "image": "marilyn79218/multi-worker",
+      "hostname": "worker",
+      "essential": false,
+      "memory": 128,
+      "__COMMENTS__": {
+        "worker_hostname": "No need for a hostname for worker, as there're no other containers need to directly access it. It's an optional field. But we can still add it of you want."
+      }
+    },
+    {
+      "name": "nginx",
+      "image": "marilyn79218/multi-nginx",
+      "essential": true,
+      "portMappings": [
+        {
+          "hostPort": 3050,
+          "containerPort": 80
+        }
+      ],
+      "links": ["client", "server"],
+      "memory": 128,
+      "__COMMENTS__": {
+        "Course": "https://www.udemy.com/course/docker-and-kubernetes-the-complete-guide/learn/lecture/11437364#overview",
+        "hostname": "No need for a hostname for nginx, just the same reason as worker, no body needs to access it.",
+        "portMappings": {
+          "hostPort": "The port opened up on the host (machine) that is hosting all our containers.",
+          "containerPort": "Port mapped to hostPort, which is the port that nginx listens to.",
+          "In short": "This property maps a port inside the container to a port on the host/ machine that is running all these containers."
+        },
+        "links": {
+          "Diagram": "https://drive.google.com/file/d/1X6Hn72BtHzVYKmmZ8Kls9Eh9iMFK0yx-/view?usp=sharing",
+          "#1": "Containers are not automatically connected like docker-compose did for us.",
+          "#2": "Specifying the containers that current container (nginx) want to connect. (uni-directional)",
+          "#3": "Specifying the container 'name' but not 'hostname'."
+        }
+      }
+    }
+  ]
+}

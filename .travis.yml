@@ -56,3 +56,17 @@ after_success:
   - docker push marilyn79218/multi-worker
 
   # Successfuly result: https://drive.google.com/open?id=1s6y0xfBB_pBvZAnRaKOx-b8DdfvCEZvX
+
+deploy:
+  provider: elasticbeanstalk
+  region: us-east-1
+  app: multi-docker
+  env: MultiDocker-env
+  bucket_name: elasticbeanstalk-us-east-1-320583230029
+  bucket_path: multi-docker
+  on:
+    branch: master
+  access_key_id:
+    secure: $AWS_ACCESS_KEY
+  secret_access_key:
+    secure: $AWS_SECRET_KEY
