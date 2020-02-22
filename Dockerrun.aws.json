@@ -9,7 +9,7 @@
       "memory": 128
     },
     {
-      "name": "api-server",
+      "name": "server",
       "image": "marilyn79218/multi-server",
       "hostname": "api-server",
       "essential": false,
@@ -32,7 +32,7 @@
           "containerPort": 80
         }
       ],
-      "links": ["client", "api-server"],
+      "links": ["client", "server"],
       "memory": 128
     }
   ]
