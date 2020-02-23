@@ -25,6 +25,7 @@ FROM nginx
     # 2. Make sure the one who make request to this Nginx is accessing the correct port
     #    (I.E., the Nginx which is responsible for external connection, is connecting the port 5005 of the internal Nginx)
     # 3. NO NEED to EXPOSE 5005 (???)
+    # 4. The answer is YES. It doesn't matter with above steps in production.
 # -------------------- DELETE ME AFTER EXPERIMENT IN PRODUCTION MODE --------------------
 EXPOSE 3000
 # Since we used a customed nginx config for this client (React) service, we need to override it over the default one
